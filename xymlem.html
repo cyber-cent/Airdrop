@@ -1,0 +1,355 @@
+<html><head><base href="https://example.com">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/ton3@0.0.12/dist/index.min.js"></script>
+<style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+    background: linear-gradient(135deg, #1a1a2e, #16213e);
+    color: white;
+    min-height: 100vh;
+    padding-bottom: 70px;
+    position: relative;
+}
+
+.container {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.header {
+    text-align: center;
+    padding: 20px 0;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+    background: linear-gradient(45deg, #0a2463, #1e3d59);
+    border-radius: 15px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    margin-bottom: 25px;
+}
+
+.user-info {
+    background: rgba(255, 255, 255, 0.05);
+    padding: 20px;
+    border-radius: 15px;
+    margin: 20px 0;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.user-avatar {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: linear-gradient(45deg, #00f2fe, #4facfe);
+    overflow: hidden;
+    border: 3px solid rgba(255, 255, 255, 0.2);
+}
+
+.tap-section {
+    background: rgba(255, 255, 255, 0.05);
+    padding: 25px;
+    border-radius: 15px;
+    margin: 20px 0;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.tap-button {
+    background: linear-gradient(45deg, #00f2fe, #4facfe);
+    border: none;
+    padding: 15px 40px;
+    border-radius: 25px;
+    color: white;
+    font-size: 18px;
+    cursor: pointer;
+    transition: all 0.3s;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    font-weight: bold;
+    box-shadow: 0 4px 15px rgba(0, 242, 254, 0.3);
+}
+
+.tap-button:active {
+    transform: scale(0.95);
+    box-shadow: 0 2px 8px rgba(0, 242, 254, 0.2);
+}
+
+.daily-claim {
+    background: rgba(255, 255, 255, 0.05);
+    padding: 25px;
+    border-radius: 15px;
+    margin: 20px 0;
+    text-align: center;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.claim-button {
+    background: linear-gradient(45deg, #FF3CAC, #784BA0);
+    border: none;
+    padding: 15px 40px;
+    border-radius: 25px;
+    color: white;
+    font-size: 18px;
+    cursor: pointer;
+    transition: all 0.3s;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    font-weight: bold;
+    box-shadow: 0 4px 15px rgba(255, 60, 172, 0.3);
+}
+
+.claim-button:disabled {
+    background: linear-gradient(45deg, #666, #444);
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+.token-display {
+    font-size: 24px;
+    margin: 20px 0;
+    text-shadow: 0 0 10px rgba(0, 242, 254, 0.5);
+}
+
+@keyframes coinPop {
+    0% { transform: scale(0) rotate(0deg); opacity: 0; }
+    50% { transform: scale(1.2) rotate(180deg); opacity: 1; }
+    100% { transform: scale(1) rotate(360deg); opacity: 0; }
+}
+
+.coin-animation {
+    position: absolute;
+    pointer-events: none;
+    font-size: 24px;
+    animation: coinPop 0.8s ease-out forwards;
+    color: #00f2fe;
+    text-shadow: 0 0 10px rgba(0, 242, 254, 0.8);
+}
+
+.bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background: rgba(26, 26, 46, 0.95);
+    backdrop-filter: blur(10px);
+    padding: 15px;
+    display: flex;
+    justify-content: space-around;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    color: white;
+    text-decoration: none;
+    font-size: 12px;
+    opacity: 0.7;
+    transition: opacity 0.3s;
+}
+
+.nav-item.active {
+    opacity: 1;
+    color: #00f2fe;
+}
+
+.nav-icon {
+    font-size: 24px;
+    margin-bottom: 5px;
+}
+
+.wallet-section {
+    display: none;
+    text-align: center;
+    padding: 20px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 15px;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    margin: 20px 0;
+}
+
+.connect-wallet-btn {
+    background: linear-gradient(45deg, #2196F3, #4CAF50);
+    border: none;
+    padding: 15px 40px;
+    border-radius: 25px;
+    color: white;
+    font-size: 18px;
+    cursor: pointer;
+    transition: all 0.3s;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    font-weight: bold;
+    box-shadow: 0 4px 15px rgba(33, 150, 243, 0.3);
+}
+</style>
+</head>
+<body>
+<div class="container" id="homeSection">
+    <div class="header">
+        <h1>Xylem Mining Game</h1>
+    </div>
+    
+    <div class="user-info">
+        <div class="user-avatar" id="userAvatar"></div>
+        <div class="user-details">
+            <h3 id="userName">Loading...</h3>
+            <p id="userBalance">Balance: 0 XYLEM</p>
+        </div>
+    </div>
+    
+    <div class="tap-section">
+        <h2>Mine Xylem</h2>
+        <p>Earn 0.1 XYLEM per tap</p>
+        <button class="tap-button" id="tapButton">MINE!</button>
+        <p id="tapCount">Mining sessions today: 0/100</p>
+    </div>
+    
+    <div class="daily-claim">
+        <h2>Daily Xylem Bonus</h2>
+        <p>Claim your daily bonus of 1 XYLEM</p>
+        <button class="claim-button" id="claimButton">Claim Daily XYLEM</button>
+        <p id="nextClaim"></p>
+    </div>
+</div>
+
+<div class="wallet-section" id="walletSection">
+    <h2>Connect TON Wallet</h2>
+    <p>Connect your TON wallet to receive your XYLEM tokens</p>
+    <button class="connect-wallet-btn" id="connectWalletBtn">Connect Wallet</button>
+</div>
+
+<div class="bottom-nav">
+    <a href="https://example.com/home" class="nav-item active" data-section="home">
+        <div class="nav-icon">🏠</div>
+        Home
+    </a>
+    <a href="https://example.com/wallet" class="nav-item" data-section="wallet">
+        <div class="nav-icon">💎</div>
+        Wallet
+    </a>
+</div>
+
+<script>
+let tg = window.Telegram.WebApp;
+let user = {
+    balance: 0,
+    tapCount: 0,
+    lastClaim: null,
+    walletAddress: null
+};
+
+document.addEventListener('DOMContentLoaded', () => {
+    tg.expand();
+    
+    if (tg.initDataUnsafe.user) {
+        document.getElementById('userName').textContent = tg.initDataUnsafe.user.first_name;
+    }
+});
+
+document.querySelectorAll('.nav-item').forEach(item => {
+    item.addEventListener('click', (e) => {
+        e.preventDefault();
+        const section = e.currentTarget.dataset.section;
+        
+        document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
+        e.currentTarget.classList.add('active');
+        
+        document.getElementById('homeSection').style.display = section === 'home' ? 'block' : 'none';
+        document.getElementById('walletSection').style.display = section === 'wallet' ? 'block' : 'none';
+    });
+});
+
+const tapButton = document.getElementById('tapButton');
+const tapCount = document.getElementById('tapCount');
+const maxTapsPerDay = 100;
+
+tapButton.addEventListener('click', (e) => {
+    if (user.tapCount >= maxTapsPerDay) {
+        tapButton.disabled = true;
+        return;
+    }
+    
+    user.tapCount++;
+    user.balance += 0.1;
+    updateUI();
+    
+    const coin = document.createElement('div');
+    coin.className = 'coin-animation';
+    coin.textContent = '+0.1 XYLEM';
+    coin.style.left = `${e.clientX - 20}px`;
+    coin.style.top = `${e.clientY - 20}px`;
+    document.body.appendChild(coin);
+    
+    setTimeout(() => coin.remove(), 800);
+});
+
+const claimButton = document.getElementById('claimButton');
+const nextClaim = document.getElementById('nextClaim');
+
+function canClaim() {
+    if (!user.lastClaim) return true;
+    const now = new Date();
+    const lastClaim = new Date(user.lastClaim);
+    return now.getDate() !== lastClaim.getDate();
+}
+
+function updateClaimButton() {
+    if (canClaim()) {
+        claimButton.disabled = false;
+        nextClaim.textContent = 'Ready to claim!';
+    } else {
+        claimButton.disabled = true;
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        tomorrow.setHours(0, 0, 0, 0);
+        const timeUntil = tomorrow - new Date();
+        const hoursUntil = Math.floor(timeUntil / (1000 * 60 * 60));
+        const minutesUntil = Math.floor((timeUntil % (1000 * 60 * 60)) / (1000 * 60));
+        nextClaim.textContent = `Next claim in ${hoursUntil}h ${minutesUntil}m`;
+    }
+}
+
+claimButton.addEventListener('click', () => {
+    if (canClaim()) {
+        user.balance += 1;
+        user.lastClaim = new Date();
+        updateUI();
+        updateClaimButton();
+    }
+});
+
+document.getElementById('connectWalletBtn').addEventListener('click', async () => {
+    alert('TON wallet connection would be implemented here');
+});
+
+function updateUI() {
+    document.getElementById('userBalance').textContent = `Balance: ${user.balance.toFixed(1)} XYLEM`;
+    tapCount.textContent = `Mining sessions today: ${user.tapCount}/${maxTapsPerDay}`;
+    updateClaimButton();
+}
+
+setInterval(updateClaimButton, 60000);
+updateUI();
+</script>
+</body></html>
